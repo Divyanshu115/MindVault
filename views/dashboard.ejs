@@ -219,13 +219,13 @@
         }
 
         btnSummarize.addEventListener('click', () => {
-            const content = contentInput.value.trim();
+            const content = contentInput.value.trim() || document.getElementById("note-view").innerText.trim();
             if (!content) return alert("Please write some content first!");
             callAI({ action: "summarize", content: content });
         });
 
         btnTranslate.addEventListener('click', () => {
-            const content = contentInput.value.trim();
+            const content = contentInput.value.trim() || document.getElementById("note-view").innerText.trim();
             if (!content) return alert("Please write some content first!");
             const language = prompt("What language do you want to translate to? (e.g. Spanish, French, Hindi)");
             if (language) {
@@ -234,7 +234,7 @@
         });
 
         btnAskAi.addEventListener('click', () => {
-            const content = contentInput.value.trim();
+            const content = contentInput.value.trim() || document.getElementById("note-view").innerText.trim();
             if (!content) return alert("Please write some content first!");
             const question = prompt("Ask a question about your note:");
             if (question) {
@@ -242,7 +242,7 @@
             }
         });
         btnQuiz.addEventListener('click', () => {
-            const content = contentInput.value.trim();
+            const content = contentInput.value.trim() || document.getElementById("note-view").innerText.trim();
             if (!content) return alert("Please write some content first!");
 
             callAI({ action: "quiz", content: content });
