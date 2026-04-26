@@ -5,18 +5,13 @@ const mongoose = require("mongoose");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const multer = require("multer");
 const { PDFParse } = require("pdf-parse");
-const session = require('express-session');
-app.use(session({
-  secret: 'my-secret-key',
-  resave: false,
-  saveUninitialized: true
-}));
+
 
 // Multer setup for memory storage
 const upload = multer({ storage: multer.memoryStorage() });
 
 // Ensure you have a .env file with your GEMINI_API_KEY and MONGODB_URI
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY; 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 const DB_URI = process.env.MONGODB_URI;
@@ -81,10 +76,10 @@ app.get("/login", (req, res) => {
 app.post("/register", async (req, res) => {
   try {
     const { name, email, password } = req.body;
-
+    
     const newUser = new User({ name, email, password });
     await newUser.save();
-
+    
     res.redirect("/login");
   } catch (error) {
     console.error(error);
@@ -97,12 +92,11 @@ let currentUser = "";
 app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-
+    
     const user = await User.findOne({ email: email, password: password });
 
     if (user) {
       currentUser = user.name;
-      req.session.user = user.name;
       res.redirect("/dashboard");
     } else {
       res.render("login", { error: "Invalid email or password" });
@@ -199,8 +193,8 @@ app.post("/link-note-to-project", async (req, res) => {
     const { projectId, noteTitle } = req.body;
     const project = await Project.findById(projectId);
     if (project && !project.notes.includes(noteTitle)) {
-      project.notes.push(noteTitle);
-      await project.save();
+        project.notes.push(noteTitle);
+        await project.save();
     }
     res.redirect("/projects");
   } catch (error) {
@@ -225,7 +219,7 @@ app.get("/analytics", async (req, res) => {
 app.get("/logout", (req, res) => {
 
   currentUser = "";
-  req.session.destroy();
+
   res.redirect("/");
 
 });
@@ -263,7 +257,7 @@ app.post("/add-note", async (req, res) => {
 
 app.post("/upload-pdf", upload.single("pdf"), async (req, res) => {
   if (!currentUser) return res.redirect("/login");
-
+  
   try {
     if (!req.file) {
       return res.status(400).send("No file uploaded");
@@ -276,8 +270,8 @@ app.post("/upload-pdf", upload.single("pdf"), async (req, res) => {
     await parser.destroy();
 
     // Determine title
-    let title = req.body.title && req.body.title.trim() !== ""
-      ? req.body.title
+    let title = req.body.title && req.body.title.trim() !== "" 
+      ? req.body.title 
       : req.file.originalname;
 
     // Create note
@@ -298,31 +292,26 @@ app.post("/upload-pdf", upload.single("pdf"), async (req, res) => {
 
 app.post("/api/ai", async (req, res) => {
   try {
-    // if (currentUser) {
-    //     await User.updateOne({ name: currentUser }, { $inc: { aiUsageCount: 1 } });
-    // }
-    const currentUserSession = req.session.user;
-
-    if (currentUserSession) {
-      await User.updateOne({ name: currentUserSession }, { $inc: { aiUsageCount: 1 } });
+    if (currentUser) {
+        await User.updateOne({ name: currentUser }, { $inc: { aiUsageCount: 1 } });
     }
     const { action, content, question, language } = req.body;
-
+    
     if (GEMINI_API_KEY === "YOUR_GEMINI_API_KEY") {
-      return res.status(400).json({ error: "Please configure your Gemini API Key in server.js" });
+        return res.status(400).json({ error: "Please configure your Gemini API Key in server.js" });
     }
 
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     let prompt = "";
 
     if (action === "summarize") {
-      prompt = `Summarize the following note clearly and concisely:\n\n${content}`;
+        prompt = `Summarize the following note clearly and concisely:\n\n${content}`;
     } else if (action === "translate") {
-      prompt = `Translate the following note into ${language}:\n\n${content}`;
+        prompt = `Translate the following note into ${language}:\n\n${content}`;
     } else if (action === "ask") {
-      prompt = `Based on the following note, answer the question.\n\nNote:\n${content}\n\nQuestion:\n${question}`;
-    } else if (action === "quiz") {
-      prompt = `
+        prompt = `Based on the following note, answer the question.\n\nNote:\n${content}\n\nQuestion:\n${question}`;
+    }else if (action === "quiz") {
+    prompt = `
     Generate 10 multiple choice questions (MCQs) from the following notes.
 
     Rules:
@@ -335,7 +324,7 @@ app.post("/api/ai", async (req, res) => {
     ${content}
     `;
     } else if (action === "project-blueprint") {
-      prompt = `
+        prompt = `
         You are an expert AI Project Manager. Analyze the following notes that belong to a single project and provide a synthesized "Executive Summary" and an "Action Plan" for next steps. Make it highly structured, using bold headings and bullet points.
         
         Notes:
@@ -353,7 +342,6 @@ app.post("/api/ai", async (req, res) => {
 });
 
 app.use((req, res) => {
-  currentUser = req.session.user;
   res.status(404).send("Page Not Found");
 });
 
