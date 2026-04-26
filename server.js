@@ -291,9 +291,12 @@ app.post("/upload-pdf", upload.single("pdf"), async (req, res) => {
 
 app.post("/api/ai", async (req, res) => {
   try {
-    if (currentUser) {
-        await User.updateOne({ name: currentUser }, { $inc: { aiUsageCount: 1 } });
-    }
+    // if (currentUser) {
+    //     await User.updateOne({ name: currentUser }, { $inc: { aiUsageCount: 1 } });
+    // }
+    if (!currentUser) {
+    return res.status(401).json({ error: "User not logged in" });
+}
     const { action, content, question, language } = req.body;
     
     if (GEMINI_API_KEY === "YOUR_GEMINI_API_KEY") {
