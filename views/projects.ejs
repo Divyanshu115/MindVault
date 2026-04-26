@@ -426,7 +426,7 @@ async function generateProjectBlueprint(projectId) {
     aiContent.innerHTML = "⏳ Loading AI...";
 
     try {
-        const response = await fetch('/api/ai', {
+        const response = await fetch(window.location.origin + '/api/ai',  {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -441,6 +441,7 @@ async function generateProjectBlueprint(projectId) {
             let formatted = result.result
                 .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
                 .replace(/\n/g, '<br>');
+                
 
             aiContent.innerHTML = formatted;
         } else {
