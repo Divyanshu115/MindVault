@@ -291,7 +291,6 @@ app.post("/upload-pdf", upload.single("pdf"), async (req, res) => {
 
 app.post("/api/ai", async (req, res) => {
   try {
-    console.log("RENDER KEY:", process.env.GEMINI_API_KEY);
     if (currentUser) {
         await User.updateOne({ name: currentUser }, { $inc: { aiUsageCount: 1 } });
     }

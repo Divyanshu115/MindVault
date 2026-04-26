@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -82,7 +83,7 @@
             border: 1px solid var(--border-light);
             position: relative;
         }
-        
+
         .modal-content.large {
             max-width: 800px;
             max-height: 90vh;
@@ -124,7 +125,7 @@
             padding-top: 20px;
             border-top: 1px solid var(--border-light);
         }
-        
+
         .linked-note-pill {
             display: inline-block;
             background: rgba(255, 255, 255, 0.05);
@@ -137,178 +138,214 @@
         }
     </style>
 </head>
+
 <body>
 
-<div class="dashboard-layout">
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <h2><i class="fa-solid fa-brain gradient-text"></i> MindVault</h2>
-        </div>
-        
-        <nav class="sidebar-nav">
-            <a href="/dashboard" class="nav-item">
-                <i class="fa-solid fa-pen-nib"></i> Editor
-            </a>
-            <a href="/all-notes" class="nav-item">
-                <i class="fa-solid fa-book-open"></i> All Notes
-            </a>
-            <a href="/projects" class="nav-item active">
-                <i class="fa-solid fa-folder-tree"></i> Projects
-            </a>
-            <a href="/analytics" class="nav-item">
-                <i class="fa-solid fa-chart-pie"></i> Analytics
-            </a>
-        </nav>
-        
-        <div class="sidebar-footer">
-            <div class="user-profile">
-                <div class="avatar"><%= user.charAt(0).toUpperCase() %></div>
-                <div>
-                    <div style="font-weight: 600; font-size: 14px;"><%= user %></div>
-                    <div style="font-size: 12px; color: var(--text-secondary);">Pro Plan</div>
-                </div>
-            </div>
-            <a href="/logout" title="Logout" style="color: var(--text-secondary);"><i class="fa-solid fa-arrow-right-from-bracket"></i></a>
-        </div>
-    </aside>
-
-    <!-- Main Content Area -->
-    <main class="main-content">
-        <div class="editor-header">
-            <div style="color: var(--text-secondary); font-size: 14px;">
-                <i class="fa-solid fa-folder-tree"></i> Workspaces
-            </div>
-        </div>
-
-        <div class="editor-body">
-            <div class="projects-header-actions">
-                <div>
-                    <h2 style="font-size: 24px; margin-bottom: 5px;">Project Workspaces</h2>
-                    <p style="color: var(--text-secondary); font-size: 14px;">Group your notes into projects and let AI synthesize them.</p>
-                </div>
-                <button class="btn btn-primary" onclick="openCreateModal()"><i class="fa-solid fa-plus"></i> New Project</button>
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fa-solid fa-brain gradient-text"></i> MindVault</h2>
             </div>
 
-            <% if(projects.length === 0){ %>
-                <div class="empty-state" style="margin-top: 50px;">
-                    <i class="fa-solid fa-layer-group" style="font-size: 64px; color: var(--accent-purple); opacity: 0.8;"></i>
-                    <h2 style="margin: 20px 0;">No Projects Yet</h2>
-                    <p>Create a project workspace to organize your knowledge and unlock powerful AI insights.</p>
-                    <br>
-                    <button class="btn btn-primary" onclick="openCreateModal()">Create First Project</button>
-                </div>
-            <% } else { %>
-                <div class="project-grid">
-                    <% projects.forEach(project => { %>
-                        <div class="project-card" style="--project-color: <%= project.color %>" onclick="openProjectModal('<%= project._id %>')">
-                            <div class="project-status"><%= project.status %></div>
-                            <h3 style="margin-bottom: 10px; font-size: 18px;"><%= project.name %></h3>
-                            <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 15px; line-height: 1.5; height: 40px; overflow: hidden;"><%= project.description || 'No description provided.' %></p>
-                            
-                            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-light); padding-top: 15px; margin-top: 10px;">
-                                <span style="font-size: 12px; color: var(--text-secondary);"><i class="fa-solid fa-file-lines"></i> <%= project.notes.length %> Notes Linked</span>
-                                <span style="color: var(--accent-purple); font-size: 12px;"><i class="fa-solid fa-robot"></i> AI Ready</span>
-                            </div>
+            <nav class="sidebar-nav">
+                <a href="/dashboard" class="nav-item">
+                    <i class="fa-solid fa-pen-nib"></i> Editor
+                </a>
+                <a href="/all-notes" class="nav-item">
+                    <i class="fa-solid fa-book-open"></i> All Notes
+                </a>
+                <a href="/projects" class="nav-item active">
+                    <i class="fa-solid fa-folder-tree"></i> Projects
+                </a>
+                <a href="/analytics" class="nav-item">
+                    <i class="fa-solid fa-chart-pie"></i> Analytics
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="avatar">
+                        <%= user.charAt(0).toUpperCase() %>
+                    </div>
+                    <div>
+                        <div style="font-weight: 600; font-size: 14px;">
+                            <%= user %>
                         </div>
-                    <% }) %>
+                        <div style="font-size: 12px; color: var(--text-secondary);">Pro Plan</div>
+                    </div>
                 </div>
-            <% } %>
-        </div>
-    </main>
-</div>
+                <a href="/logout" title="Logout" style="color: var(--text-secondary);"><i
+                        class="fa-solid fa-arrow-right-from-bracket"></i></a>
+            </div>
+        </aside>
 
-<!-- Create Project Modal -->
-<div id="createModal" class="modal-overlay">
-    <div class="modal-content">
-        <button class="close-modal" onclick="closeModals()"><i class="fa-solid fa-times"></i></button>
-        <h2 style="margin-bottom: 20px;">Create New Project</h2>
-        
-        <form action="/create-project" method="POST">
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 5px; font-size: 13px; color: var(--text-secondary);">Project Name</label>
-                <input type="text" name="name" class="title-input" required autocomplete="off" style="margin-bottom: 0; padding: 10px; font-size: 16px;">
-            </div>
-            
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 5px; font-size: 13px; color: var(--text-secondary);">Description</label>
-                <textarea name="description" class="content-input" style="min-height: 80px; padding: 10px; font-size: 14px; margin-bottom: 0; display: block;" placeholder="What is this project about?"></textarea>
-            </div>
-            
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 10px; font-size: 13px; color: var(--text-secondary);">Theme Color</label>
-                <div class="color-picker">
-                    <div class="color-option selected" style="background: #8b5cf6;" onclick="selectColor(this, '#8b5cf6')"></div>
-                    <div class="color-option" style="background: #ec4899;" onclick="selectColor(this, '#ec4899')"></div>
-                    <div class="color-option" style="background: #3b82f6;" onclick="selectColor(this, '#3b82f6')"></div>
-                    <div class="color-option" style="background: #10b981;" onclick="selectColor(this, '#10b981')"></div>
-                    <div class="color-option" style="background: #f59e0b;" onclick="selectColor(this, '#f59e0b')"></div>
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <div class="editor-header">
+                <div style="color: var(--text-secondary); font-size: 14px;">
+                    <i class="fa-solid fa-folder-tree"></i> Workspaces
                 </div>
-                <input type="hidden" name="color" id="selectedColor" value="#8b5cf6">
             </div>
-            
-            <button type="submit" class="btn btn-primary" style="width: 100%;"><i class="fa-solid fa-check"></i> Create Project Workspace</button>
-        </form>
-    </div>
-</div>
 
-<!-- Project Details Modal -->
-<div id="projectModal" class="modal-overlay">
-    <div class="modal-content large">
-        <button class="close-modal" onclick="closeModals()"><i class="fa-solid fa-times"></i></button>
-        
-        <div id="projectModalContent">
-            <!-- Populated by JS -->
+            <div class="editor-body">
+                <div class="projects-header-actions">
+                    <div>
+                        <h2 style="font-size: 24px; margin-bottom: 5px;">Project Workspaces</h2>
+                        <p style="color: var(--text-secondary); font-size: 14px;">Group your notes into projects and let
+                            AI synthesize them.</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openCreateModal()"><i class="fa-solid fa-plus"></i> New
+                        Project</button>
+                </div>
+
+                <% if(projects.length===0){ %>
+                    <div class="empty-state" style="margin-top: 50px;">
+                        <i class="fa-solid fa-layer-group"
+                            style="font-size: 64px; color: var(--accent-purple); opacity: 0.8;"></i>
+                        <h2 style="margin: 20px 0;">No Projects Yet</h2>
+                        <p>Create a project workspace to organize your knowledge and unlock powerful AI insights.</p>
+                        <br>
+                        <button class="btn btn-primary" onclick="openCreateModal()">Create First Project</button>
+                    </div>
+                    <% } else { %>
+                        <div class="project-grid">
+                            <% projects.forEach(project=> { %>
+                                <div class="project-card" style="--project-color: <%= project.color %>"
+                                    onclick="openProjectModal('<%= project._id %>')">
+                                    <div class="project-status">
+                                        <%= project.status %>
+                                    </div>
+                                    <h3 style="margin-bottom: 10px; font-size: 18px;">
+                                        <%= project.name %>
+                                    </h3>
+                                    <p
+                                        style="color: var(--text-secondary); font-size: 13px; margin-bottom: 15px; line-height: 1.5; height: 40px; overflow: hidden;">
+                                        <%= project.description || 'No description provided.' %>
+                                    </p>
+
+                                    <div
+                                        style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-light); padding-top: 15px; margin-top: 10px;">
+                                        <span style="font-size: 12px; color: var(--text-secondary);"><i
+                                                class="fa-solid fa-file-lines"></i>
+                                            <%= project.notes.length %> Notes Linked
+                                        </span>
+                                        <span style="color: var(--accent-purple); font-size: 12px;"><i
+                                                class="fa-solid fa-robot"></i> AI Ready</span>
+                                    </div>
+                                </div>
+                                <% }) %>
+                        </div>
+                        <% } %>
+            </div>
+        </main>
+    </div>
+
+    <!-- Create Project Modal -->
+    <div id="createModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeModals()"><i class="fa-solid fa-times"></i></button>
+            <h2 style="margin-bottom: 20px;">Create New Project</h2>
+
+            <form action="/create-project" method="POST">
+                <div style="margin-bottom: 15px;">
+                    <label
+                        style="display: block; margin-bottom: 5px; font-size: 13px; color: var(--text-secondary);">Project
+                        Name</label>
+                    <input type="text" name="name" class="title-input" required autocomplete="off"
+                        style="margin-bottom: 0; padding: 10px; font-size: 16px;">
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label
+                        style="display: block; margin-bottom: 5px; font-size: 13px; color: var(--text-secondary);">Description</label>
+                    <textarea name="description" class="content-input"
+                        style="min-height: 80px; padding: 10px; font-size: 14px; margin-bottom: 0; display: block;"
+                        placeholder="What is this project about?"></textarea>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label
+                        style="display: block; margin-bottom: 10px; font-size: 13px; color: var(--text-secondary);">Theme
+                        Color</label>
+                    <div class="color-picker">
+                        <div class="color-option selected" style="background: #8b5cf6;"
+                            onclick="selectColor(this, '#8b5cf6')"></div>
+                        <div class="color-option" style="background: #ec4899;" onclick="selectColor(this, '#ec4899')">
+                        </div>
+                        <div class="color-option" style="background: #3b82f6;" onclick="selectColor(this, '#3b82f6')">
+                        </div>
+                        <div class="color-option" style="background: #10b981;" onclick="selectColor(this, '#10b981')">
+                        </div>
+                        <div class="color-option" style="background: #f59e0b;" onclick="selectColor(this, '#f59e0b')">
+                        </div>
+                    </div>
+                    <input type="hidden" name="color" id="selectedColor" value="#8b5cf6">
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;"><i class="fa-solid fa-check"></i>
+                    Create Project Workspace</button>
+            </form>
         </div>
-        
     </div>
-</div>
 
-<!-- All Notes Data available for JS -->
-<script id="notes-data" type="application/json"><%- JSON.stringify(notes) %></script>
-<script id="projects-data" type="application/json"><%- JSON.stringify(projects) %></script>
-<script>
-    // Pass server data to frontend nicely
-    const allNotes = JSON.parse(document.getElementById('notes-data').textContent);
-    const allProjects = JSON.parse(document.getElementById('projects-data').textContent);
+    <!-- Project Details Modal -->
+    <div id="projectModal" class="modal-overlay">
+        <div class="modal-content large">
+            <button class="close-modal" onclick="closeModals()"><i class="fa-solid fa-times"></i></button>
 
-    function openCreateModal() {
-        document.getElementById('createModal').style.display = 'flex';
-    }
+            <div id="projectModalContent">
+                <!-- Populated by JS -->
+            </div>
 
-    function closeModals() {
-        document.getElementById('createModal').style.display = 'none';
-        document.getElementById('projectModal').style.display = 'none';
-        
-        // Hide AI result if open
-        const aiContainer = document.getElementById('project-ai-result');
-        if(aiContainer) aiContainer.style.display = 'none';
-    }
+        </div>
+    </div>
 
-    function selectColor(element, color) {
-        document.querySelectorAll('.color-option').forEach(el => el.classList.remove('selected'));
-        element.classList.add('selected');
-        document.getElementById('selectedColor').value = color;
-    }
+    <!-- All Notes Data available for JS -->
+    <script id="notes-data" type="application/json"><%- JSON.stringify(notes) %></script>
+    <script id="projects-data" type="application/json"><%- JSON.stringify(projects) %></script>
+    <script>
+        // Pass server data to frontend nicely
+        const allNotes = JSON.parse(document.getElementById('notes-data').textContent);
+        const allProjects = JSON.parse(document.getElementById('projects-data').textContent);
 
-    function openProjectModal(projectId) {
-        const project = allProjects.find(p => p._id === projectId);
-        if(!project) return;
-        
-        let linkedNotesHtml = '';
-        if(project.notes.length === 0) {
-            linkedNotesHtml = '<p style="color: var(--text-secondary); font-size: 13px;">No notes linked to this project yet.</p>';
-        } else {
-            project.notes.forEach(noteTitle => {
-                linkedNotesHtml += `<span class="linked-note-pill"><i class="fa-regular fa-file"></i> ${noteTitle}</span>`;
-            });
+        function openCreateModal() {
+            document.getElementById('createModal').style.display = 'flex';
         }
-        
-        let availableNotesHtml = '';
-        const unlinkedNotes = allNotes.filter(n => !project.notes.includes(n.title));
-        
-        if(unlinkedNotes.length > 0) {
-            availableNotesHtml = `
+
+        function closeModals() {
+            document.getElementById('createModal').style.display = 'none';
+            document.getElementById('projectModal').style.display = 'none';
+
+            // Hide AI result if open
+            const aiContainer = document.getElementById('project-ai-result');
+            if (aiContainer) aiContainer.style.display = 'none';
+        }
+
+        function selectColor(element, color) {
+            document.querySelectorAll('.color-option').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            document.getElementById('selectedColor').value = color;
+        }
+
+        function openProjectModal(projectId) {
+            const project = allProjects.find(p => p._id === projectId);
+            if (!project) return;
+
+            let linkedNotesHtml = '';
+            if (project.notes.length === 0) {
+                linkedNotesHtml = '<p style="color: var(--text-secondary); font-size: 13px;">No notes linked to this project yet.</p>';
+            } else {
+                project.notes.forEach(noteTitle => {
+                    linkedNotesHtml += `<span class="linked-note-pill"><i class="fa-regular fa-file"></i> ${noteTitle}</span>`;
+                });
+            }
+
+            let availableNotesHtml = '';
+            const unlinkedNotes = allNotes.filter(n => !project.notes.includes(n.title));
+
+            if (unlinkedNotes.length > 0) {
+                availableNotesHtml = `
                 <form action="/link-note-to-project" method="POST" style="display: flex; gap: 10px; margin-top: 15px;">
                     <input type="hidden" name="projectId" value="${project._id}">
                     <select name="noteTitle" required style="flex: 1; padding: 8px; border-radius: 8px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-light); color: white;">
@@ -318,11 +355,11 @@
                     <button type="submit" class="btn btn-outline" style="padding: 8px 15px;">Link</button>
                 </form>
             `;
-        } else {
-             availableNotesHtml = '<p style="color: var(--text-secondary); font-size: 13px; margin-top: 10px;">All your notes are already linked here.</p>';
-        }
+            } else {
+                availableNotesHtml = '<p style="color: var(--text-secondary); font-size: 13px; margin-top: 10px;">All your notes are already linked here.</p>';
+            }
 
-        const modalHtml = `
+            const modalHtml = `
             <div style="border-bottom: 2px solid ${project.color}; padding-bottom: 15px; margin-bottom: 20px;">
                 <span class="project-status" style="margin-bottom: 10px;">${project.status}</span>
                 <h2 style="font-size: 28px; margin-bottom: 10px;">${project.name}</h2>
@@ -355,56 +392,64 @@
                 ${availableNotesHtml}
             </div>
         `;
-        
-        document.getElementById('projectModalContent').innerHTML = modalHtml;
-        document.getElementById('projectModal').style.display = 'flex';
-    }
 
-    async function generateProjectBlueprint(projectId) {
-        const project = allProjects.find(p => p._id === projectId);
-        if(!project || project.notes.length === 0) return;
-        
-        // Gather all content from linked notes
-        let combinedContent = "";
-        project.notes.forEach(noteTitle => {
-            const note = allNotes.find(n => n.title === noteTitle);
-            if(note) {
-                combinedContent += `--- Note: ${note.title} ---\n${note.content}\n\n`;
-            }
-        });
-        
-        const aiContainer = document.getElementById('project-ai-result');
-        const aiContent = document.getElementById('project-ai-content');
-        
-        aiContainer.style.display = 'block';
-        aiContent.innerHTML = '<div style="text-align: center; padding: 20px;"><i class="fa-solid fa-spinner fa-spin fa-2x" style="color: var(--accent-purple);"></i><p style="margin-top: 10px; color: var(--text-secondary);">Analyzing your project workspace...</p></div>';
-        
-        try {
-            const response = await fetch('/api/ai', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: "project-blueprint",
-                    content: combinedContent
-                })
-            });
-            const result = await response.json();
-            
-            if (response.ok) {
-                let formattedResult = result.result;
-                formattedResult = formattedResult.replace(/\*\*(.*?)\*\*/g, '<b style="color: white;">$1</b>');
-                formattedResult = formattedResult.replace(/\n/g, '<br>');
-                formattedResult = formattedResult.replace(/\*/g, '•'); // simple list formatting
-                
-                aiContent.innerHTML = formattedResult;
-            } else {
-                aiContent.innerHTML = `<span style="color: #ff4d4d;">Failed to generate insights: ${result.error || 'Unknown error'}</span>`;
-            }
-        } catch (error) {
-            aiContent.innerHTML = `<span style="color: #ff4d4d;">Network error. Please try again.</span>`;
+            document.getElementById('projectModalContent').innerHTML = modalHtml;
+            document.getElementById('projectModal').style.display = 'flex';
         }
-    }
-</script>
-<script src="/theme.js"></script>
+
+        async function generateProjectBlueprint(projectId) {
+            const project = allProjects.find(p => p._id === projectId);
+            if (!project || project.notes.length === 0) return;
+
+            // Gather all content from linked notes
+            let combinedContent = "";
+
+            project.notes.forEach(noteTitle => {
+                const note = allNotes.find(n => n.title === noteTitle);
+                if (note && note.content && note.content.trim() !== "") {
+                    combinedContent += `--- Note: ${note.title} ---\n${note.content}\n\n`;
+                }
+            });
+
+            // 🔥 IMPORTANT FIX
+            if (!combinedContent || combinedContent.trim() === "") {
+                alert("Please add valid notes to this project first!");
+                return;
+            }
+
+            const aiContainer = document.getElementById('project-ai-result');
+            const aiContent = document.getElementById('project-ai-content');
+
+            aiContainer.style.display = 'block';
+            aiContent.innerHTML = '<div style="text-align: center; padding: 20px;"><i class="fa-solid fa-spinner fa-spin fa-2x" style="color: var(--accent-purple);"></i><p style="margin-top: 10px; color: var(--text-secondary);">Analyzing your project workspace...</p></div>';
+
+            try {
+                const response = await fetch('/api/ai', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: "project-blueprint",
+                        content: combinedContent
+                    })
+                });
+                const result = await response.json();
+
+                if (response.ok) {
+                    let formattedResult = result.result;
+                    formattedResult = formattedResult.replace(/\*\*(.*?)\*\*/g, '<b style="color: white;">$1</b>');
+                    formattedResult = formattedResult.replace(/\n/g, '<br>');
+                    formattedResult = formattedResult.replace(/\*/g, '•'); // simple list formatting
+
+                    aiContent.innerHTML = formattedResult;
+                } else {
+                    aiContent.innerHTML = `<span style="color: #ff4d4d;">Failed to generate insights: ${result.error || 'Unknown error'}</span>`;
+                }
+            } catch (error) {
+                aiContent.innerHTML = `<span style="color: #ff4d4d;">Network error. Please try again.</span>`;
+            }
+        }
+    </script>
+    <script src="/theme.js"></script>
 </body>
+
 </html>
