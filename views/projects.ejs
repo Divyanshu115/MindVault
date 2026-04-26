@@ -397,57 +397,61 @@
             document.getElementById('projectModal').style.display = 'flex';
         }
 
-        async function generateProjectBlueprint(projectId) {
-            const project = allProjects.find(p => p._id === projectId);
-            if (!project || project.notes.length === 0) return;
+async function generateProjectBlueprint(projectId) {
+    const project = allProjects.find(p => p._id === projectId);
+    if (!project || project.notes.length === 0) {
+        alert("No notes linked!");
+        return;
+    }
 
-            // Gather all content from linked notes
-            let combinedContent = "";
+    let combinedContent = "";
 
-            project.notes.forEach(noteTitle => {
-                const note = allNotes.find(n => n.title === noteTitle);
-                if (note && note.content && note.content.trim() !== "") {
-                    combinedContent += `--- Note: ${note.title} ---\n${note.content}\n\n`;
-                }
-            });
-
-            // 🔥 IMPORTANT FIX
-            if (!combinedContent || combinedContent.trim() === "") {
-                alert("Please add valid notes to this project first!");
-                return;
-            }
-
-            const aiContainer = document.getElementById('project-ai-result');
-            const aiContent = document.getElementById('project-ai-content');
-
-            aiContainer.style.display = 'block';
-            aiContent.innerHTML = '<div style="text-align: center; padding: 20px;"><i class="fa-solid fa-spinner fa-spin fa-2x" style="color: var(--accent-purple);"></i><p style="margin-top: 10px; color: var(--text-secondary);">Analyzing your project workspace...</p></div>';
-
-            try {
-                const response = await fetch('/api/ai', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: "project-blueprint",
-                        content: combinedContent
-                    })
-                });
-                const result = await response.json();
-
-                if (response.ok) {
-                    let formattedResult = result.result;
-                    formattedResult = formattedResult.replace(/\*\*(.*?)\*\*/g, '<b style="color: white;">$1</b>');
-                    formattedResult = formattedResult.replace(/\n/g, '<br>');
-                    formattedResult = formattedResult.replace(/\*/g, '•'); // simple list formatting
-
-                    aiContent.innerHTML = formattedResult;
-                } else {
-                    aiContent.innerHTML = `<span style="color: #ff4d4d;">Failed to generate insights: ${result.error || 'Unknown error'}</span>`;
-                }
-            } catch (error) {
-                aiContent.innerHTML = `<span style="color: #ff4d4d;">Network error. Please try again.</span>`;
-            }
+    project.notes.forEach(noteTitle => {
+        const note = allNotes.find(n => n.title === noteTitle);
+        if (note && note.content && note.content.trim() !== "") {
+            combinedContent += `--- Note: ${note.title} ---\n${note.content}\n\n`;
         }
+    });
+
+    // 🔥 IMPORTANT FIX
+    if (!combinedContent || combinedContent.trim().length < 10) {
+        alert("Notes content too small or empty!");
+        return;
+    }
+
+    const aiContainer = document.getElementById('project-ai-result');
+    const aiContent = document.getElementById('project-ai-content');
+
+    aiContainer.style.display = 'block';
+    aiContent.innerHTML = "⏳ Loading AI...";
+
+    try {
+        const response = await fetch('/api/ai', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: "project-blueprint",
+                content: combinedContent
+            })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            let formatted = result.result
+                .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+                .replace(/\n/g, '<br>');
+
+            aiContent.innerHTML = formatted;
+        } else {
+            aiContent.innerHTML = "❌ AI failed (server error)";
+        }
+
+    } catch (err) {
+        console.error("AI ERROR:", err);
+        aiContent.innerHTML = "❌ Network error";
+    }
+}
     </script>
     <script src="/theme.js"></script>
 </body>
