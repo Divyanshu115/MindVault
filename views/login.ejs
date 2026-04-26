@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | MindVault</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+<nav class="navbar">
+    <h2><i class="fa-solid fa-brain gradient-text"></i> MindVault</h2>
+    <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/about">About</a>
+        <a href="/register" class="btn btn-outline">Register</a>
+    </div>
+</nav>
+
+<section class="form-section">
+    <div class="form-card glass-panel">
+        <h1>Welcome Back</h1>
+        <p class="form-subtitle">Log in to access your knowledge vault</p>
+
+        <% if (typeof error !== 'undefined' && error) { %>
+            <div style="background: #fee2e2; color: #b91c1c; padding: 10px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; text-align: center; border: 1px solid #fca5a5;">
+                <i class="fa-solid fa-triangle-exclamation"></i> <%= error %>
+            </div>
+        <% } %>
+
+        <form action="/login" method="POST">
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="you@example.com" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Sign In <i class="fa-solid fa-arrow-right-to-bracket" style="margin-left: 8px;"></i></button>
+        </form>
+
+        <p class="switch">
+            Don't have an account? <a href="/register">Create one now</a>
+        </p>
+    </div>
+</section>
+
+<script src="/theme.js"></script>
+</body>
+</html>
