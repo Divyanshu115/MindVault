@@ -1,4 +1,6 @@
-require("dotenv").config();
+delete process.env.GEMINI_API_KEY;
+require("dotenv").config({ path: ".env.local" });
+console.log("KEY:", process.env.GEMINI_API_KEY);
 const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
