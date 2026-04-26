@@ -353,6 +353,7 @@ app.post("/api/ai", async (req, res) => {
 });
 
 app.use((req, res) => {
+  currentUser = req.session.user;
   res.status(404).send("Page Not Found");
 });
 
