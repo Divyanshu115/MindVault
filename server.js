@@ -16,7 +16,7 @@ const bcrypt = require("bcryptjs");
 const upload = multer({ storage: multer.memoryStorage() });
 
 // Ensure you have a .env file with your GEMINI_API_KEY and MONGODB_URI
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY; 
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 const DB_URI = process.env.MONGODB_URI;
@@ -98,13 +98,13 @@ app.post("/register", async (req, res) => {
   try {
     let { name, email, password } = req.body;
     email = email.trim().toLowerCase();
-    
+
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-    
+
     const newUser = new User({ name, email, password: hashedPassword });
     await newUser.save();
-    
+
     res.redirect("/login");
   } catch (error) {
     console.error(error);
@@ -116,24 +116,24 @@ app.post("/login", async (req, res) => {
   try {
     let { email, password } = req.body;
     email = email.trim().toLowerCase();
-    
+
     const user = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
 
     if (user) {
       const isMatch = await bcrypt.compare(password, user.password);
       if (isMatch) {
         const token = jwt.sign({ id: user._id, name: user.name }, JWT_SECRET, { expiresIn: '1d' });
-        
+
         res.cookie('token', token, {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
           maxAge: 24 * 60 * 60 * 1000 // 1 day
         });
-        
+
         return res.redirect("/dashboard");
       }
     }
-    
+
     res.render("login", { error: "Invalid email or password" });
   } catch (error) {
     console.error(error);
@@ -276,8 +276,8 @@ app.post("/upload-pdf", requireAuth, upload.single("pdf"), async (req, res) => {
     await parser.destroy();
 
     // Determine title
-    let title = req.body.title && req.body.title.trim() !== "" 
-      ? req.body.title 
+    let title = req.body.title && req.body.title.trim() !== ""
+      ? req.body.title
       : req.file.originalname;
 
     // Create note
@@ -299,24 +299,24 @@ app.post("/upload-pdf", requireAuth, upload.single("pdf"), async (req, res) => {
 app.post("/api/ai", requireAuth, async (req, res) => {
   try {
     await User.updateOne({ name: req.user.name }, { $inc: { aiUsageCount: 1 } });
-    
+
     const { action, content, question, language } = req.body;
-    
+
     if (GEMINI_API_KEY === "YOUR_GEMINI_API_KEY") {
-        return res.status(400).json({ error: "Please configure your Gemini API Key in server.js" });
+      return res.status(400).json({ error: "Please configure your Gemini API Key in server.js" });
     }
 
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     let prompt = "";
 
     if (action === "summarize") {
-        prompt = `Summarize the following note clearly and concisely:\n\n${content}`;
+      prompt = `Summarize the following note clearly and concisely:\n\n${content}`;
     } else if (action === "translate") {
-        prompt = `Translate the following note into ${language}:\n\n${content}`;
+      prompt = `Translate the following note into ${language}:\n\n${content}`;
     } else if (action === "ask") {
-        prompt = `Based on the following note, answer the question.\n\nNote:\n${content}\n\nQuestion:\n${question}`;
-    }else if (action === "quiz") {
-    prompt = `
+      prompt = `Based on the following note, answer the question.\n\nNote:\n${content}\n\nQuestion:\n${question}`;
+    } else if (action === "quiz") {
+      prompt = `
     Generate 10 multiple choice questions (MCQs) from the following notes.
 
     Rules:
@@ -363,6 +363,14 @@ Rules:
 - Highlight important formulas, theorems, or concepts in bold
 - Keep the language simple and exam-oriented
 - Add memory tips or mnemonics where helpful
+- If the syllabus mentions "Introduction to AI", cover basic concepts like:
+  - What is AI?
+  - Types of AI (narrow, general, super)
+  - History of AI
+  - Applications of AI
+  - Ethical considerations
+  - Relation to Machine Learning
+  -Not more than 500 words
 
 Syllabus:
 ${syllabusText}`;
