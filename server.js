@@ -370,7 +370,7 @@ Rules:
   - Applications of AI
   - Ethical considerations
   - Relation to Machine Learning
-  -Not more than 500 words
+-Not more than 500 words
 
 Syllabus:
 ${syllabusText}`;
@@ -412,6 +412,14 @@ Rules:
 - Highlight important formulas, theorems, or concepts in bold
 - Keep the language simple and exam-oriented
 - Add memory tips or mnemonics where helpful
+- If the syllabus mentions "Introduction to AI", cover basic concepts like:
+  - What is AI?
+  - Types of AI (narrow, general, super)
+  - History of AI
+  - Applications of AI
+  - Ethical considerations
+  - Relation to Machine Learning
+-Not more than 500 words
 
 Syllabus:
 ${extractedText}`;
