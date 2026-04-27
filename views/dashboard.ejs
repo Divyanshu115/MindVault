@@ -59,7 +59,7 @@
                     <i class="fa-regular fa-folder"></i> Personal / New Note
                 </div>
                 <div class="editor-toolbar">
-                    <button class="btn btn-outline" style="padding: 6px 12px; font-size: 13px;"><i
+                    <button class="btn btn-outline" style="padding: 6px 12px; font-size: 13px;" id="btn-share-note" onclick="shareCurrentNote()"><i
                             class="fa-solid fa-share-nodes"></i> Share</button>
                     <button class="btn btn-primary" style="padding: 6px 12px; font-size: 13px;" form="note-form"><i
                             class="fa-solid fa-check"></i> Save Note</button>
@@ -143,7 +143,7 @@
 
                                 <% notes.forEach(note=> { %>
                                     <div class="note-card" data-title="<%= note.title %>"
-                                        data-content="<%= note.content %>" onclick="openNote(this)">
+                                        data-content="<%= note.content %>" data-id="<%= note._id %>" onclick="openNote(this)">
                                         <h3>
                                             <%= note.title %>
                                         </h3>
@@ -156,13 +156,19 @@
                                             <span style="color: var(--accent-purple);"><i
                                                     class="fa-solid fa-wand-magic-sparkles"></i> AI Synced</span>
                                         </div>
-                                        <form action="/delete-note" method="POST" style="margin-top:10px;">
-                                            <input type="hidden" name="title" value="<%= note.title %>">
-                                            <button type="submit"
-                                                style="background:red;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;">
-                                                Delete
+                                        <div style="margin-top:10px; display:flex; gap:8px; align-items:center;">
+                                            <form action="/delete-note" method="POST" style="margin:0;">
+                                                <input type="hidden" name="title" value="<%= note.title %>">
+                                                <button type="submit"
+                                                    style="background:red;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;">
+                                                    Delete
+                                                </button>
+                                            </form>
+                                            <button type="button" onclick="event.stopPropagation(); shareNote('<%= note._id %>')" 
+                                                style="background:linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:12px;">
+                                                <i class="fa-solid fa-share-nodes"></i> Share
                                             </button>
-                                        </form>
+                                        </div>
                                     </div>
                                     <% }) %>
                     </div>
@@ -248,9 +254,13 @@
             callAI({ action: "quiz", content: content });
         });
 
+        // Track currently open note ID for the header Share button
+        let currentNoteId = null;
+
         function openNote(element) {
             const title = element.getAttribute('data-title');
             const content = element.getAttribute('data-content');
+            currentNoteId = element.getAttribute('data-id');
 
             document.querySelector('.title-input').value = title;
 
@@ -264,6 +274,37 @@
             textarea.style.display = "none";
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ── Share Functions ──
+        async function shareNote(noteId) {
+            try {
+                const res = await fetch('/api/share-link/' + noteId);
+                const data = await res.json();
+                if (data.shareUrl) {
+                    await navigator.clipboard.writeText(data.shareUrl);
+                    showToast('Share link copied to clipboard!');
+                } else {
+                    showToast('Could not generate share link');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Error generating share link');
+            }
+        }
+
+        function shareCurrentNote() {
+            if (!currentNoteId) {
+                return alert('Please open a saved note first to share it.');
+            }
+            shareNote(currentNoteId);
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
         }
 
 window.onload = function () {
@@ -296,6 +337,36 @@ window.onload = function () {
         });
 
     </script>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <i class="fa-solid fa-check-circle"></i> <span id="toast-msg">Link copied!</span>
+    </div>
+
+    <style>
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--text-primary);
+            color: var(--bg-primary);
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 9999;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        }
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+    </style>
+
     <script src="/theme.js"></script>
 </body>
 

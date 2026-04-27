@@ -338,6 +338,34 @@ app.post("/api/ai", requireAuth, async (req, res) => {
   }
 });
 
+// ── Share Note Routes ──
+app.get("/shared/:id", async (req, res) => {
+  try {
+    const note = await Note.findById(req.params.id);
+    if (!note) {
+      return res.status(404).send("Note not found or has been removed.");
+    }
+    res.render("shared-note", { note });
+  } catch (error) {
+    console.error(error);
+    res.status(404).send("Note not found.");
+  }
+});
+
+app.get("/api/share-link/:id", requireAuth, async (req, res) => {
+  try {
+    const note = await Note.findById(req.params.id);
+    if (!note) {
+      return res.status(404).json({ error: "Note not found" });
+    }
+    const shareUrl = `${req.protocol}://${req.get("host")}/shared/${note._id}`;
+    res.json({ shareUrl });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error generating share link" });
+  }
+});
+
 app.use((req, res) => {
   res.status(404).send("Page Not Found");
 });

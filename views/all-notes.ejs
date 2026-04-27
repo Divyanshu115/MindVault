@@ -69,20 +69,26 @@
                     <% } %>
 
                     <% notes.forEach(note => { %>
-                        <div class="note-card" data-title="<%= note.title %>" data-content="<%= note.content %>" onclick="openNoteFromAll(this)">
+                        <div class="note-card" data-title="<%= note.title %>" data-content="<%= note.content %>" data-id="<%= note._id %>" onclick="openNoteFromAll(this)">
                             <h3><%= note.title %></h3>
                             <p><%= note.content %></p>
                             <div style="margin-top: 15px; font-size: 12px; color: var(--text-secondary); display: flex; justify-content: space-between;">
                                 <span><i class="fa-regular fa-clock"></i> Saved</span>
                                 <span style="color: var(--accent-purple);"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Indexed</span>
                             </div>
-                                <form action="/delete-note" method="POST" style="margin-top:10px;">
+                            <div style="margin-top:10px; display:flex; gap:8px; align-items:center;">
+                                <form action="/delete-note" method="POST" style="margin:0;">
                                     <input type="hidden" name="title" value="<%= note.title %>">
                                     <button type="submit"
                                         style="background:red;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;">
                                         Delete
                                     </button>
                                 </form>
+                                <button type="button" onclick="event.stopPropagation(); shareNote('<%= note._id %>')" 
+                                    style="background:linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:12px;">
+                                    <i class="fa-solid fa-share-nodes"></i> Share
+                                </button>
+                            </div>
                         </div>
                     <% }) %>
                 </div>
@@ -92,10 +98,62 @@
 
 </div>
 
+<!-- Toast Notification -->
+<div class="toast" id="toast">
+    <i class="fa-solid fa-check-circle"></i> <span id="toast-msg">Link copied!</span>
+</div>
+
+<style>
+    .toast {
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%) translateY(100px);
+        background: var(--text-primary);
+        color: var(--bg-primary);
+        padding: 12px 24px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        z-index: 9999;
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    }
+    .toast.show {
+        transform: translateX(-50%) translateY(0);
+    }
+</style>
+
 <script>
     function openNoteFromAll(element) {
         const title = element.getAttribute('data-title');
         window.location.href = "/dashboard?title=" + encodeURIComponent(title);
+    }
+
+    async function shareNote(noteId) {
+        try {
+            const res = await fetch('/api/share-link/' + noteId);
+            const data = await res.json();
+            if (data.shareUrl) {
+                await navigator.clipboard.writeText(data.shareUrl);
+                showToast('Share link copied to clipboard!');
+            } else {
+                showToast('Could not generate share link');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('Error generating share link');
+        }
+    }
+
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        document.getElementById('toast-msg').textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2500);
     }
 </script>
 <script src="/theme.js"></script>

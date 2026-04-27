@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= note.title %> — Shared via MindVault</title>
+    <meta name="description" content="A note shared via MindVault — AI-Powered Smart Notes">
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .shared-navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 5%;
+            background: var(--bg-blur);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-light);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .shared-navbar h2 {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-display);
+        }
+
+        .shared-container {
+            flex: 1;
+            max-width: 820px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 50px 30px 80px;
+        }
+
+        .shared-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 30px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            color: var(--accent-purple);
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        [data-theme="dark"] .shared-badge {
+            background: linear-gradient(135deg, rgba(255, 183, 3, 0.1), rgba(251, 133, 0, 0.1));
+            border: 1px solid rgba(255, 183, 3, 0.2);
+        }
+
+        .shared-title {
+            font-size: 42px;
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -1px;
+            margin-bottom: 16px;
+            font-family: var(--font-display);
+            animation: fadeInUp 0.5s ease 0.1s both;
+        }
+
+        .shared-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid var(--border-light);
+            animation: fadeInUp 0.5s ease 0.2s both;
+        }
+
+        .shared-meta .author-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .shared-meta .author-chip .mini-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            color: white;
+        }
+
+        .shared-content {
+            font-size: 17px;
+            line-height: 1.9;
+            color: var(--text-secondary);
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            animation: fadeInUp 0.5s ease 0.3s both;
+        }
+
+        .shared-content p {
+            margin-bottom: 16px;
+        }
+
+        .shared-footer-cta {
+            max-width: 820px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 30px;
+            text-align: center;
+            animation: fadeInUp 0.5s ease 0.4s both;
+        }
+
+        .cta-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-light);
+            border-radius: 20px;
+            padding: 40px 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(to right, var(--accent-cyan), var(--accent-purple));
+        }
+
+        .cta-card h3 {
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+
+        .cta-card p {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+            font-size: 15px;
+        }
+
+        .copy-link-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            background: transparent;
+            border: 1px solid var(--border-light);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+        }
+
+        .copy-link-btn:hover {
+            background: var(--bg-glass);
+            border-color: var(--accent-cyan);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--text-primary);
+            color: var(--bg-primary);
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 9999;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            .shared-container {
+                padding: 30px 20px 60px;
+            }
+            .shared-title {
+                font-size: 28px;
+            }
+            .shared-content {
+                font-size: 15px;
+            }
+            .shared-navbar {
+                padding: 14px 5%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="shared-navbar">
+        <h2><i class="fa-solid fa-brain gradient-text"></i> MindVault</h2>
+        <div style="display: flex; gap: 12px; align-items: center;">
+            <button class="copy-link-btn" id="copyLinkBtn" onclick="copyShareLink()">
+                <i class="fa-solid fa-link"></i> Copy Link
+            </button>
+            <a href="/login" class="btn btn-primary" style="padding: 8px 18px; font-size: 14px;">
+                <i class="fa-solid fa-arrow-right-to-bracket"></i>&nbsp; Sign In
+            </a>
+        </div>
+    </nav>
+
+    <!-- Shared Note Content -->
+    <div class="shared-container">
+        <div class="shared-badge">
+            <i class="fa-solid fa-share-nodes"></i> Shared Note
+        </div>
+
+        <h1 class="shared-title"><%= note.title %></h1>
+
+        <div class="shared-meta">
+            <div class="author-chip">
+                <div class="mini-avatar"><%= note.user.charAt(0).toUpperCase() %></div>
+                <span><%= note.user %></span>
+            </div>
+            <span style="opacity: 0.4;">•</span>
+            <span><i class="fa-solid fa-brain" style="margin-right: 4px;"></i> MindVault</span>
+        </div>
+
+        <div class="shared-content"><%= note.content %></div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="shared-footer-cta">
+        <div class="cta-card">
+            <h3>✨ Create Your Own Smart Notes</h3>
+            <p>MindVault uses AI to help you organize, summarize, and understand your notes better.</p>
+            <a href="/register" class="btn btn-primary" style="padding: 12px 28px;">
+                Get Started Free <i class="fa-solid fa-arrow-right" style="margin-left: 6px;"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <i class="fa-solid fa-check-circle"></i> <span id="toast-msg">Link copied!</span>
+    </div>
+
+    <script>
+        function copyShareLink() {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                showToast('Link copied to clipboard!');
+            }).catch(() => {
+                // Fallback
+                const input = document.createElement('input');
+                input.value = window.location.href;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+                showToast('Link copied to clipboard!');
+            });
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+    </script>
+    <script src="/theme.js"></script>
+</body>
+</html>
