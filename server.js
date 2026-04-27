@@ -8,8 +8,7 @@ const { PDFParse } = require("pdf-parse");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const bcrypt = require("bcryptjs");
-const cron = require("node-cron");
-const nodemailer = require("nodemailer");
+
 
 
 // Multer setup for memory storage
@@ -328,13 +327,6 @@ app.post("/api/ai", requireAuth, async (req, res) => {
     Notes:
     ${content}
     `;
-    } else if (action === "project-blueprint") {
-        prompt = `
-        You are an expert AI Project Manager. Analyze the following notes that belong to a single project and provide a synthesized "Executive Summary" and an "Action Plan" for next steps. Make it highly structured, using bold headings and bullet points.
-        
-        Notes:
-        ${content}
-        `;
     }
 
     const result = await model.generateContent(prompt);
@@ -350,47 +342,7 @@ app.use((req, res) => {
   res.status(404).send("Page Not Found");
 });
 
-// Schedule daily email at 8:00 AM
-cron.schedule('0 8 * * *', async () => {
-  console.log('Running daily deadline email job...');
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      console.log('Email credentials missing. Skipping daily email.');
-      return;
-  }
-  try {
-    const users = await User.find({});
-    
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
-    });
 
-    for (const user of users) {
-      const deadlines = await Deadline.find({ user: user.name }).sort({ dueDate: 1 });
-      
-      if (deadlines.length > 0) {
-        let emailContent = `Hello ${user.name},\n\nHere are your upcoming deadlines:\n\n`;
-        deadlines.forEach(d => {
-          emailContent += `- ${d.title} (${d.type}) on ${d.dueDate.toDateString()}\n`;
-        });
-        emailContent += `\nGood luck!\nMindVault Team`;
-
-        await transporter.sendMail({
-          from: process.env.EMAIL_USER,
-          to: user.email,
-          subject: 'MindVault - Your Daily Deadline Reminder',
-          text: emailContent
-        });
-        console.log(`Sent email to ${user.email}`);
-      }
-    }
-  } catch (error) {
-    console.error('Error sending daily emails:', error);
-  }
-});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
