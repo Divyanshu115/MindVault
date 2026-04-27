@@ -339,6 +339,84 @@ app.post("/api/ai", requireAuth, async (req, res) => {
   }
 });
 
+// ── Syllabus Notes Page ──
+app.get("/syllabus", requireAuth, (req, res) => {
+  res.render("syllabus", { user: req.user.name });
+});
+
+app.post("/api/syllabus-notes", requireAuth, async (req, res) => {
+  try {
+    await User.updateOne({ name: req.user.name }, { $inc: { aiUsageCount: 1 } });
+
+    const { syllabusText } = req.body;
+    if (!syllabusText || syllabusText.trim().length === 0) {
+      return res.status(400).json({ error: "Please provide syllabus text." });
+    }
+
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const prompt = `You are an expert academic tutor. Based on the following syllabus, generate comprehensive yet concise short notes that a student can use for exam revision.
+
+Rules:
+- Cover every topic mentioned in the syllabus
+- Use clear headings (## for units/modules, ### for sub-topics)
+- Write short, crisp definitions and key points using bullet points
+- Highlight important formulas, theorems, or concepts in bold
+- Keep the language simple and exam-oriented
+- Add memory tips or mnemonics where helpful
+
+Syllabus:
+${syllabusText}`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    res.json({ result: response.text() });
+  } catch (error) {
+    console.error("Syllabus Notes Error:", error.message);
+    res.status(500).json({ error: error.message || "Failed to generate syllabus notes." });
+  }
+});
+
+app.post("/api/syllabus-notes-pdf", requireAuth, upload.single("pdf"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No PDF file uploaded." });
+    }
+
+    await User.updateOne({ name: req.user.name }, { $inc: { aiUsageCount: 1 } });
+
+    // Extract text from PDF
+    const parser = new PDFParse({ data: req.file.buffer });
+    const pdfData = await parser.getText();
+    const extractedText = pdfData.text;
+    await parser.destroy();
+
+    if (!extractedText || extractedText.trim().length === 0) {
+      return res.status(400).json({ error: "Could not extract text from the PDF. Please try pasting the syllabus text instead." });
+    }
+
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const prompt = `You are an expert academic tutor. Based on the following syllabus extracted from a PDF, generate comprehensive yet concise short notes that a student can use for exam revision.
+
+Rules:
+- Cover every topic mentioned in the syllabus
+- Use clear headings (## for units/modules, ### for sub-topics)
+- Write short, crisp definitions and key points using bullet points
+- Highlight important formulas, theorems, or concepts in bold
+- Keep the language simple and exam-oriented
+- Add memory tips or mnemonics where helpful
+
+Syllabus:
+${extractedText}`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    res.json({ result: response.text() });
+  } catch (error) {
+    console.error("Syllabus PDF Notes Error:", error.message);
+    res.status(500).json({ error: error.message || "Failed to generate syllabus notes from PDF." });
+  }
+});
+
 // ── Share Note Routes ──
 app.get("/shared/:id", async (req, res) => {
   try {

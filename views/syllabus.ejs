@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Syllabus Notes | MindVault</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .syllabus-container {
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .input-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 0;
+        }
+
+        .input-tab {
+            padding: 14px 28px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-light);
+            color: var(--text-secondary);
+            font-family: var(--font-sans);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-tab:first-child {
+            border-radius: 12px 0 0 0;
+        }
+
+        .input-tab:last-child {
+            border-radius: 0 12px 0 0;
+        }
+
+        .input-tab.active {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(168, 85, 247, 0.25);
+        }
+
+        .input-tab:not(.active):hover {
+            background: var(--bg-panel);
+            color: var(--text-primary);
+        }
+
+        .tab-content {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-light);
+            border-top: none;
+            border-radius: 0 12px 12px 12px;
+            padding: 30px;
+            backdrop-filter: blur(16px);
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+            animation: fadeSlideIn 0.4s ease;
+        }
+
+        @keyframes fadeSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .syllabus-textarea {
+            width: 100%;
+            min-height: 250px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            font-size: 15px;
+            line-height: 1.8;
+            padding: 20px;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        .syllabus-textarea:focus {
+            outline: none;
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15);
+        }
+
+        .syllabus-textarea::placeholder {
+            color: var(--text-placeholder);
+        }
+
+        /* PDF Upload Zone */
+        .pdf-drop-zone {
+            border: 2px dashed var(--border-light);
+            border-radius: 16px;
+            padding: 50px 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            background: var(--bg-secondary);
+        }
+
+        .pdf-drop-zone:hover,
+        .pdf-drop-zone.dragover {
+            border-color: var(--accent-cyan);
+            background: rgba(59, 130, 246, 0.05);
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.1);
+        }
+
+        .pdf-drop-zone .drop-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .pdf-drop-zone h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .pdf-drop-zone p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .pdf-drop-zone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-selected {
+            margin-top: 15px;
+            padding: 12px 18px;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 10px;
+            color: #22c55e;
+            font-size: 14px;
+            font-weight: 500;
+            display: none;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .file-selected.show {
+            display: flex;
+        }
+
+        /* Generate Button */
+        .generate-btn {
+            margin-top: 20px;
+            width: 100%;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 700;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .generate-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.15), transparent);
+            transform: skewX(-25deg);
+            animation: shine 3s infinite;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(168, 85, 247, 0.35);
+        }
+
+        .generate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Results Section */
+        .results-section {
+            display: none;
+            animation: fadeSlideIn 0.5s ease;
+        }
+
+        .results-section.show {
+            display: block;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .results-header h3 {
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .results-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .notes-output {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 30px;
+            line-height: 1.9;
+            font-size: 15px;
+            backdrop-filter: blur(16px);
+            position: relative;
+        }
+
+        .notes-output h1,
+        .notes-output h2,
+        .notes-output h3 {
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: var(--accent-cyan);
+        }
+
+        .notes-output h1:first-child,
+        .notes-output h2:first-child,
+        .notes-output h3:first-child {
+            margin-top: 0;
+        }
+
+        .notes-output ul,
+        .notes-output ol {
+            padding-left: 24px;
+            margin: 10px 0;
+        }
+
+        .notes-output li {
+            margin-bottom: 6px;
+        }
+
+        .notes-output b,
+        .notes-output strong {
+            color: var(--text-primary);
+        }
+
+        /* Loading spinner */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .loading-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-light);
+            border-radius: 20px;
+            padding: 50px 60px;
+            text-align: center;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .loading-card .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid var(--border-light);
+            border-top-color: var(--accent-cyan);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-card h3 {
+            margin-bottom: 8px;
+            font-size: 20px;
+        }
+
+        .loading-card p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* Stat pills */
+        .stat-pills {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .stat-pill {
+            padding: 8px 16px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stat-pill.topics {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent-cyan);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .stat-pill.words {
+            background: rgba(168, 85, 247, 0.1);
+            color: var(--accent-purple);
+            border: 1px solid rgba(168, 85, 247, 0.2);
+        }
+
+        .stat-pill.saved {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        /* Page intro */
+        .page-intro {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .page-intro h1 {
+            font-size: 36px;
+            margin-bottom: 12px;
+        }
+
+        .page-intro p {
+            color: var(--text-secondary);
+            font-size: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--text-primary);
+            color: var(--bg-primary);
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 9999;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        }
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="dashboard-layout">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fa-solid fa-brain gradient-text"></i> MindVault</h2>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="/dashboard" class="nav-item">
+                    <i class="fa-solid fa-pen-nib"></i> Editor
+                </a>
+                <a href="/all-notes" class="nav-item">
+                    <i class="fa-solid fa-book-open"></i> All Notes
+                </a>
+                <a href="/syllabus" class="nav-item active">
+                    <i class="fa-solid fa-graduation-cap"></i> Syllabus Notes
+                </a>
+                <a href="/deadlines" class="nav-item">
+                    <i class="fa-solid fa-clock"></i> Deadlines
+                </a>
+                <a href="/analytics" class="nav-item">
+                    <i class="fa-solid fa-chart-pie"></i> Analytics
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="avatar">
+                        <%= user.charAt(0).toUpperCase() %>
+                    </div>
+                    <div>
+                        <div style="font-weight: 600; font-size: 14px;">
+                            <%= user %>
+                        </div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">Pro Plan</div>
+                    </div>
+                </div>
+                <a href="/logout" title="Logout" style="color: var(--text-secondary);"><i
+                        class="fa-solid fa-arrow-right-from-bracket"></i></a>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <div class="editor-header">
+                <div style="color: var(--text-secondary); font-size: 14px;">
+                    <i class="fa-solid fa-graduation-cap"></i> Syllabus Notes Generator
+                </div>
+            </div>
+
+            <div class="editor-body">
+                <div class="syllabus-container">
+
+                    <!-- Page Intro -->
+                    <div class="page-intro">
+                        <h1><i class="fa-solid fa-wand-magic-sparkles gradient-text"></i> Syllabus Notes Generator</h1>
+                        <p>Upload your syllabus PDF or paste the syllabus text below, and AI will generate concise, exam-ready short notes for you.</p>
+                    </div>
+
+                    <!-- Input Section -->
+                    <div class="input-section">
+                        <div class="input-tabs">
+                            <button class="input-tab active" data-tab="text" onclick="switchTab('text')">
+                                <i class="fa-solid fa-keyboard"></i> Type / Paste Syllabus
+                            </button>
+                            <button class="input-tab" data-tab="pdf" onclick="switchTab('pdf')">
+                                <i class="fa-solid fa-file-pdf"></i> Upload PDF
+                            </button>
+                        </div>
+
+                        <div class="tab-content">
+                            <!-- Text Tab -->
+                            <div class="tab-panel active" id="tab-text">
+                                <textarea class="syllabus-textarea" id="syllabus-text"
+                                    placeholder="Paste or type your syllabus here...&#10;&#10;Example:&#10;Unit 1: Introduction to Data Structures&#10;- Arrays, Linked Lists, Stacks, Queues&#10;- Time and Space Complexity&#10;&#10;Unit 2: Trees and Graphs&#10;- Binary Trees, BST, AVL Trees&#10;- BFS, DFS, Dijkstra's Algorithm"></textarea>
+                            </div>
+
+                            <!-- PDF Tab -->
+                            <div class="tab-panel" id="tab-pdf">
+                                <div class="pdf-drop-zone" id="drop-zone">
+                                    <input type="file" id="pdf-input" accept="application/pdf">
+                                    <div class="drop-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                                    <h3>Drop your Syllabus PDF here</h3>
+                                    <p>or click to browse &bull; Maximum 10MB</p>
+                                </div>
+                                <div class="file-selected" id="file-selected">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                    <span id="file-name">document.pdf</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="generate-btn" id="generate-btn" onclick="generateNotes()">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Short Notes
+                        </button>
+                    </div>
+
+                    <!-- Results Section -->
+                    <div class="results-section" id="results-section">
+                        <div class="results-header">
+                            <h3><i class="fa-solid fa-scroll gradient-text"></i> Generated Short Notes</h3>
+                            <div class="results-actions">
+                                <button class="btn btn-outline" style="padding: 8px 16px; font-size: 13px;" onclick="copyNotes()">
+                                    <i class="fa-regular fa-copy"></i> Copy
+                                </button>
+                                <button class="btn btn-primary" style="padding: 8px 16px; font-size: 13px;" onclick="saveAsNote()">
+                                    <i class="fa-solid fa-floppy-disk"></i> Save as Note
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="stat-pills" id="stat-pills"></div>
+
+                        <div class="notes-output" id="notes-output"></div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-card">
+            <div class="spinner"></div>
+            <h3>Generating Notes...</h3>
+            <p>AI is analyzing your syllabus and creating short notes</p>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <i class="fa-solid fa-check-circle"></i> <span id="toast-msg">Done!</span>
+    </div>
+
+    <script>
+        let generatedRawText = '';
+
+        // Tab switching
+        function switchTab(tab) {
+            document.querySelectorAll('.input-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelector(`.input-tab[data-tab="${tab}"]`).classList.add('active');
+            document.getElementById(`tab-${tab}`).classList.add('active');
+        }
+
+        // PDF file input handling
+        const pdfInput = document.getElementById('pdf-input');
+        const dropZone = document.getElementById('drop-zone');
+        const fileSelected = document.getElementById('file-selected');
+        const fileName = document.getElementById('file-name');
+
+        pdfInput.addEventListener('change', function () {
+            if (this.files.length > 0) {
+                fileName.textContent = this.files[0].name;
+                fileSelected.classList.add('show');
+            }
+        });
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                pdfInput.files = e.dataTransfer.files;
+                fileName.textContent = e.dataTransfer.files[0].name;
+                fileSelected.classList.add('show');
+            }
+        });
+
+        // Generate notes
+        async function generateNotes() {
+            const activeTab = document.querySelector('.input-tab.active').getAttribute('data-tab');
+            const btn = document.getElementById('generate-btn');
+            const loading = document.getElementById('loading-overlay');
+
+            let syllabusText = '';
+
+            if (activeTab === 'text') {
+                syllabusText = document.getElementById('syllabus-text').value.trim();
+                if (!syllabusText) {
+                    return alert('Please enter your syllabus text first!');
+                }
+
+                // Send as JSON
+                btn.disabled = true;
+                loading.classList.add('show');
+
+                try {
+                    const response = await fetch('/api/syllabus-notes', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ syllabusText })
+                    });
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        displayResults(data.result);
+                    } else {
+                        alert(data.error || 'Failed to generate notes. Please try again.');
+                    }
+                } catch (error) {
+                    console.error(error);
+                    alert('Network error. Please check your connection and try again.');
+                } finally {
+                    btn.disabled = false;
+                    loading.classList.remove('show');
+                }
+
+            } else {
+                // PDF mode
+                const file = pdfInput.files[0];
+                if (!file) {
+                    return alert('Please select a PDF file first!');
+                }
+
+                btn.disabled = true;
+                loading.classList.add('show');
+
+                try {
+                    const formData = new FormData();
+                    formData.append('pdf', file);
+
+                    const response = await fetch('/api/syllabus-notes-pdf', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        displayResults(data.result);
+                    } else {
+                        alert(data.error || 'Failed to generate notes. Please try again.');
+                    }
+                } catch (error) {
+                    console.error(error);
+                    alert('Network error. Please check your connection and try again.');
+                } finally {
+                    btn.disabled = false;
+                    loading.classList.remove('show');
+                }
+            }
+        }
+
+        function displayResults(rawText) {
+            generatedRawText = rawText;
+
+            const resultsSection = document.getElementById('results-section');
+            const output = document.getElementById('notes-output');
+            const statPills = document.getElementById('stat-pills');
+
+            // Format markdown-style text to HTML
+            let formatted = rawText;
+            // Headers
+            formatted = formatted.replace(/^### (.*?)$/gm, '<h3>$1</h3>');
+            formatted = formatted.replace(/^## (.*?)$/gm, '<h2>$1</h2>');
+            formatted = formatted.replace(/^# (.*?)$/gm, '<h1>$1</h1>');
+            // Bold
+            formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+            // Italic
+            formatted = formatted.replace(/\*(.*?)\*/g, '<i>$1</i>');
+            // Bullet points
+            formatted = formatted.replace(/^- (.*?)$/gm, '<li>$1</li>');
+            formatted = formatted.replace(/(<li>.*?<\/li>)/gs, '<ul>$1</ul>');
+            // Clean up nested <ul>
+            formatted = formatted.replace(/<\/ul>\s*<ul>/g, '');
+            // Line breaks
+            formatted = formatted.replace(/\n/g, '<br>');
+            // Clean up excessive breaks
+            formatted = formatted.replace(/(<br>){3,}/g, '<br><br>');
+            // Remove leftover *
+            formatted = formatted.replace(/\*/g, '');
+
+            output.innerHTML = formatted;
+
+            // Stats
+            const wordCount = rawText.split(/\s+/).length;
+            const headingCount = (rawText.match(/^#{1,3} /gm) || []).length;
+
+            statPills.innerHTML = `
+                <div class="stat-pill topics"><i class="fa-solid fa-bookmark"></i> ${headingCount} Topics</div>
+                <div class="stat-pill words"><i class="fa-solid fa-font"></i> ${wordCount} Words</div>
+            `;
+
+            resultsSection.classList.add('show');
+            resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function copyNotes() {
+            navigator.clipboard.writeText(generatedRawText).then(() => {
+                showToast('Notes copied to clipboard!');
+            });
+        }
+
+        async function saveAsNote() {
+            const title = prompt('Enter a title for this note:', 'Syllabus Short Notes');
+            if (!title) return;
+
+            try {
+                const response = await fetch('/add-note', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `title=${encodeURIComponent(title)}&content=${encodeURIComponent(generatedRawText)}`
+                });
+
+                if (response.ok) {
+                    showToast('Saved as a note successfully!');
+                    // Add saved badge
+                    const statPills = document.getElementById('stat-pills');
+                    if (!statPills.querySelector('.saved')) {
+                        statPills.innerHTML += `<div class="stat-pill saved"><i class="fa-solid fa-check-circle"></i> Saved</div>`;
+                    }
+                } else {
+                    showToast('Failed to save note.');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Error saving note.');
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+    </script>
+
+    <script src="/theme.js"></script>
+</body>
+
+</html>
