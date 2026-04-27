@@ -5,6 +5,11 @@ const mongoose = require("mongoose");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const multer = require("multer");
 const { PDFParse } = require("pdf-parse");
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
+const bcrypt = require("bcryptjs");
+const cron = require("node-cron");
+const nodemailer = require("nodemailer");
 
 
 // Multer setup for memory storage
@@ -21,7 +26,7 @@ mongoose.connect(DB_URI)
 
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  email: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   aiUsageCount: { type: Number, default: 0 }
 });
@@ -34,21 +39,37 @@ const noteSchema = new mongoose.Schema({
 });
 const Note = mongoose.model("Note", noteSchema);
 
-const projectSchema = new mongoose.Schema({
+const deadlineSchema = new mongoose.Schema({
   user: { type: String, required: true },
-  name: { type: String, required: true },
-  description: { type: String },
-  status: { type: String, default: 'Planning' },
-  color: { type: String, default: '#8b5cf6' },
-  notes: [{ type: String }] // Array of note titles
+  title: { type: String, required: true },
+  type: { type: String, required: true },
+  dueDate: { type: Date, required: true }
 });
-const Project = mongoose.model("Project", projectSchema);
+const Deadline = mongoose.model("Deadline", deadlineSchema);
 
 app.set("view engine", "ejs");
 
 app.use(express.static("public"));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json()); // Required for parsing JSON bodies from AI fetch requests
+app.use(cookieParser());
+
+const JWT_SECRET = process.env.JWT_SECRET;
+
+const requireAuth = (req, res, next) => {
+  const token = req.cookies.token;
+  if (!token) {
+    return res.redirect("/login");
+  }
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    res.clearCookie("token");
+    return res.redirect("/login");
+  }
+};
 
 const logger = (req, res, next) => {
   console.log("Request received:", req.method, req.url);
@@ -75,9 +96,13 @@ app.get("/login", (req, res) => {
 
 app.post("/register", async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    let { name, email, password } = req.body;
+    email = email.trim().toLowerCase();
     
-    const newUser = new User({ name, email, password });
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    
+    const newUser = new User({ name, email, password: hashedPassword });
     await newUser.save();
     
     res.redirect("/login");
@@ -85,34 +110,43 @@ app.post("/register", async (req, res) => {
     console.error(error);
     res.status(500).render("register", { error: "Error registering user" });
   }
-})
-
-let currentUser = "";
+});
 
 app.post("/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
+    let { email, password } = req.body;
+    email = email.trim().toLowerCase();
     
-    const user = await User.findOne({ email: email, password: password });
+    const user = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
 
     if (user) {
-      currentUser = user.name;
-      res.redirect("/dashboard");
-    } else {
-      res.render("login", { error: "Invalid email or password" });
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (isMatch) {
+        const token = jwt.sign({ id: user._id, name: user.name }, JWT_SECRET, { expiresIn: '1d' });
+        
+        res.cookie('token', token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          maxAge: 24 * 60 * 60 * 1000 // 1 day
+        });
+        
+        return res.redirect("/dashboard");
+      }
     }
+    
+    res.render("login", { error: "Invalid email or password" });
   } catch (error) {
     console.error(error);
     res.status(500).render("login", { error: "Error logging in" });
   }
-})
+});
 
-app.post("/delete-note", async (req, res) => {
+app.post("/delete-note", requireAuth, async (req, res) => {
   try {
     const { title } = req.body;
 
     await Note.deleteOne({
-      user: currentUser,
+      user: req.user.name,
       title: title
     });
 
@@ -123,114 +157,88 @@ app.post("/delete-note", async (req, res) => {
   }
 });
 
-app.get("/dashboard", async (req, res) => {
-  if (!currentUser) return res.redirect("/login");
+app.get("/dashboard", requireAuth, async (req, res) => {
   try {
-    const userNotes = await Note.find({ user: currentUser });
-    res.render("dashboard", { user: currentUser, notes: userNotes });
+    const userNotes = await Note.find({ user: req.user.name });
+    res.render("dashboard", { user: req.user.name, notes: userNotes });
   } catch (error) {
     console.error(error);
     res.status(500).send("Error fetching notes");
-  }
-})
-
-app.get("/all-notes", async (req, res) => {
-  if (!currentUser) return res.redirect("/login");
-  try {
-    const userNotes = await Note.find({ user: currentUser });
-    res.render("all-notes", { user: currentUser, notes: userNotes });
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Error fetching notes");
-  }
-})
-
-app.get("/projects", async (req, res) => {
-  if (!currentUser) return res.redirect("/login");
-  try {
-    const userProjects = await Project.find({ user: currentUser });
-    const userNotes = await Note.find({ user: currentUser });
-    res.render("projects", { user: currentUser, projects: userProjects, notes: userNotes });
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Error fetching projects");
   }
 });
 
-app.post("/create-project", async (req, res) => {
-  if (!currentUser) return res.redirect("/login");
+app.get("/all-notes", requireAuth, async (req, res) => {
   try {
-    const { name, description, color } = req.body;
-    const newProject = new Project({
-      user: currentUser,
-      name,
-      description,
-      color: color || '#8b5cf6'
+    const userNotes = await Note.find({ user: req.user.name });
+    res.render("all-notes", { user: req.user.name, notes: userNotes });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error fetching notes");
+  }
+});
+
+app.get("/deadlines", requireAuth, async (req, res) => {
+  try {
+    const userDeadlines = await Deadline.find({ user: req.user.name }).sort({ dueDate: 1 });
+    res.render("deadlines", { user: req.user.name, deadlines: userDeadlines });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error fetching deadlines");
+  }
+});
+
+app.post("/add-deadline", requireAuth, async (req, res) => {
+  try {
+    const { title, type, dueDate } = req.body;
+    const newDeadline = new Deadline({
+      user: req.user.name,
+      title,
+      type,
+      dueDate: new Date(dueDate)
     });
-    await newProject.save();
-    res.redirect("/projects");
+    await newDeadline.save();
+    res.redirect("/deadlines");
   } catch (error) {
     console.error(error);
-    res.status(500).send("Error creating project");
+    res.status(500).send("Error creating deadline");
   }
 });
 
-app.post("/delete-project", async (req, res) => {
-  if (!currentUser) return res.redirect("/login");
+app.post("/delete-deadline", requireAuth, async (req, res) => {
   try {
     const { id } = req.body;
-    await Project.findByIdAndDelete(id);
-    res.redirect("/projects");
+    await Deadline.findByIdAndDelete(id);
+    res.redirect("/deadlines");
   } catch (error) {
     console.error(error);
-    res.status(500).send("Error deleting project");
+    res.status(500).send("Error deleting deadline");
   }
 });
 
-app.post("/link-note-to-project", async (req, res) => {
-  if (!currentUser) return res.redirect("/login");
+app.get("/analytics", requireAuth, async (req, res) => {
   try {
-    const { projectId, noteTitle } = req.body;
-    const project = await Project.findById(projectId);
-    if (project && !project.notes.includes(noteTitle)) {
-        project.notes.push(noteTitle);
-        await project.save();
-    }
-    res.redirect("/projects");
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Error linking note");
-  }
-});
-
-app.get("/analytics", async (req, res) => {
-  if (!currentUser) return res.redirect("/login");
-  try {
-    const noteCount = await Note.countDocuments({ user: currentUser });
-    const userDoc = await User.findOne({ name: currentUser });
+    const noteCount = await Note.countDocuments({ user: req.user.name });
+    const userDoc = await User.findOne({ name: req.user.name });
     const aiCount = userDoc ? (userDoc.aiUsageCount || 0) : 0;
-    res.render("analytics", { user: currentUser, noteCount: noteCount, aiCount: aiCount });
+    res.render("analytics", { user: req.user.name, noteCount: noteCount, aiCount: aiCount });
   } catch (error) {
     console.error(error);
     res.status(500).send("Error fetching analytics");
   }
-})
-
-app.get("/logout", (req, res) => {
-
-  currentUser = "";
-
-  res.redirect("/");
-
 });
 
-app.post("/add-note", async (req, res) => {
+app.get("/logout", (req, res) => {
+  res.clearCookie("token");
+  res.redirect("/");
+});
+
+app.post("/add-note", requireAuth, async (req, res) => {
   try {
     const { title, content } = req.body;
 
     // check if note already exists for this user + title
     let existingNote = await Note.findOne({
-      user: currentUser,
+      user: req.user.name,
       title: title
     });
 
@@ -241,7 +249,7 @@ app.post("/add-note", async (req, res) => {
     } else {
       // CREATE
       const newNote = new Note({
-        user: currentUser,
+        user: req.user.name,
         title: title,
         content: content
       });
@@ -255,9 +263,7 @@ app.post("/add-note", async (req, res) => {
   }
 });
 
-app.post("/upload-pdf", upload.single("pdf"), async (req, res) => {
-  if (!currentUser) return res.redirect("/login");
-  
+app.post("/upload-pdf", requireAuth, upload.single("pdf"), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).send("No file uploaded");
@@ -276,7 +282,7 @@ app.post("/upload-pdf", upload.single("pdf"), async (req, res) => {
 
     // Create note
     const newNote = new Note({
-      user: currentUser,
+      user: req.user.name,
       title: title,
       content: extractedText
     });
@@ -290,11 +296,10 @@ app.post("/upload-pdf", upload.single("pdf"), async (req, res) => {
 });
 
 
-app.post("/api/ai", async (req, res) => {
+app.post("/api/ai", requireAuth, async (req, res) => {
   try {
-    if (currentUser) {
-        await User.updateOne({ name: currentUser }, { $inc: { aiUsageCount: 1 } });
-    }
+    await User.updateOne({ name: req.user.name }, { $inc: { aiUsageCount: 1 } });
+    
     const { action, content, question, language } = req.body;
     
     if (GEMINI_API_KEY === "YOUR_GEMINI_API_KEY") {
@@ -343,6 +348,48 @@ app.post("/api/ai", async (req, res) => {
 
 app.use((req, res) => {
   res.status(404).send("Page Not Found");
+});
+
+// Schedule daily email at 8:00 AM
+cron.schedule('0 8 * * *', async () => {
+  console.log('Running daily deadline email job...');
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.log('Email credentials missing. Skipping daily email.');
+      return;
+  }
+  try {
+    const users = await User.find({});
+    
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
+    });
+
+    for (const user of users) {
+      const deadlines = await Deadline.find({ user: user.name }).sort({ dueDate: 1 });
+      
+      if (deadlines.length > 0) {
+        let emailContent = `Hello ${user.name},\n\nHere are your upcoming deadlines:\n\n`;
+        deadlines.forEach(d => {
+          emailContent += `- ${d.title} (${d.type}) on ${d.dueDate.toDateString()}\n`;
+        });
+        emailContent += `\nGood luck!\nMindVault Team`;
+
+        await transporter.sendMail({
+          from: process.env.EMAIL_USER,
+          to: user.email,
+          subject: 'MindVault - Your Daily Deadline Reminder',
+          text: emailContent
+        });
+        console.log(`Sent email to ${user.email}`);
+      }
+    }
+  } catch (error) {
+    console.error('Error sending daily emails:', error);
+  }
 });
 
 const PORT = process.env.PORT || 3000;
