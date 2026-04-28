@@ -28,7 +28,7 @@ exports.postAiAction = async (req, res) => {
       return res.status(400).json({ error: "Please configure your Gemini API Key" });
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     let prompt = "";
 
     if (action === "summarize") {
@@ -63,7 +63,7 @@ exports.postSyllabusNotes = async (req, res) => {
       return res.status(400).json({ error: "Please provide syllabus text." });
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     const prompt = `You are an expert academic tutor. Based on the following syllabus, generate comprehensive yet concise short notes that a student can use for exam revision.
 
 Rules:
@@ -111,7 +111,7 @@ exports.postSyllabusNotesPdf = async (req, res) => {
       return res.status(400).json({ error: "Could not extract text from the PDF. Please try pasting the syllabus text instead." });
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     const prompt = `You are an expert academic tutor. Based on the following syllabus extracted from a PDF, generate comprehensive yet concise short notes that a student can use for exam revision.
 
 Rules:
