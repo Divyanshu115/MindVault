@@ -12,17 +12,15 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
 
-// Logger Middleware
 const logger = require("./middleware/logger");
 app.use(logger);
 
-// Database Connection
 const DB_URI = process.env.MONGODB_URI;
 mongoose.connect(DB_URI)
   .then(() => console.log("Connected to MongoDB"))
   .catch(err => console.error("MongoDB connection error:", err));
 
-// Routes
+
 const indexRoutes = require("./routes/indexRoutes");
 const authRoutes = require("./routes/authRoutes");
 const noteRoutes = require("./routes/noteRoutes");

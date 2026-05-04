@@ -142,4 +142,4 @@ ${extractedText}`;
   }
 };
 
-// I'll use the full prompts from server.js to ensure functionality is identical.
+
